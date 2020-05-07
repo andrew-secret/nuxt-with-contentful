@@ -2,23 +2,23 @@
   <div class="container">
     <div>
       <logo />
-      <h1 class="title">
-        nuxt-with-contentful
-      </h1>
-      <h2 class="subtitle">
-        NuxtJS with Contentful
-      </h2>
+      <h1 class="title">nuxt-with-contentful</h1>
+      <h2 class="subtitle">NuxtJS with Contentful</h2>
       <div class="links">
-        <a href="https://nuxtjs.org/" target="_blank" class="button--green">
-          Documentation
-        </a>
+        <a href="https://nuxtjs.org/" target="_blank" class="button--green"
+          >Documentation</a
+        >
         <a
           href="https://github.com/nuxt/nuxt.js"
           target="_blank"
           class="button--grey"
+          >GitHub</a
         >
-          GitHub
-        </a>
+        <ul>
+          <li v-for="post in posts" :key="post.id">
+            {{ post.fields.title }}
+          </li>
+        </ul>
       </div>
     </div>
   </div>
@@ -27,10 +27,32 @@
 <script lang="ts">
 import Vue from 'vue'
 import Logo from '~/components/Logo.vue'
+import { createContentfulClient } from '~/plugins/contentful.ts'
+
+const client = createContentfulClient()
 
 export default Vue.extend({
   components: {
     Logo
+  },
+
+  asyncData({ env }) {
+    return Promise.all([
+      client.getEntries({
+        'sys.id': env.CTF_PERSON_ID
+      }),
+      client.getEntries({
+        content_type: env.CTF_BLOG_POST_TYPE_ID,
+        order: '-sys.createdAt'
+      })
+    ])
+      .then(([entries, posts]) => {
+        return {
+          person: entries.items[0],
+          posts: posts.items
+        }
+      })
+      .catch(console.error)
   }
 })
 </script>
